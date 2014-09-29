@@ -1,0 +1,26 @@
+{
+  "name": "processor",
+  "version": "0.0.0",
+  "description": "A node js command line parser",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --recursive --reporter spec --bail --check-leaks test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/misejs/processor.git"
+  },
+  "keywords": [
+    "cli",
+    "misejs"
+  ],
+  "author": "Jesse Ditson <jesse.ditson@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/misejs/processor/issues"
+  },
+  "homepage": "https://github.com/misejs/processor",
+  "devDependencies": {
+    "mocha": "^1.21.4"
+  }
+}
