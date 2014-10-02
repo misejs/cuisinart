@@ -4,7 +4,8 @@
   "description": "A node js command line parser",
   "main": "cuisinart.js",
   "scripts": {
-    "test": "mocha --recursive --reporter spec --bail --check-leaks test/tests/"
+    "test": "mocha --recursive --reporter spec --bail --check-leaks test/tests/",
+    "test-travis": "mocha --recursive --reporter spec --bail --check-leaks test/"
   },
   "repository": {
     "type": "git",

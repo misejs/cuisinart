@@ -1,6 +1,8 @@
 cuisinart
 =========
 
+[![Build Status](https://travis-ci.org/misejs/cuisinart.svg)](https://travis-ci.org/misejs/cuisinart)
+
 A node js command line parser, built for mise.js
 
 cuisinart is used for parsing command line arguments with modular subcommands. It will auto generate help based on the subcommands available.
