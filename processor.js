@@ -21,19 +21,23 @@ var matchOption = function(args,option){
   if(bothFlags){
     pattern += ')';
   }
-  pattern += '\\s([^-]+)?';
+  pattern += '(?:\\s|$)([^-]+)?';
   var regex = new RegExp(pattern);
   var matches = args.join(' ').match(regex);
   if(matches){
-    return matches.length > 1 ? matches[1].trim() : true;
+    return matches[1] ? matches[1].trim() : true;
   } else {
     return false;
   }
 }
 
 var matchCommand = function(args,command){
-  var regex = new RegExp('(\\s|^)' + command.name + '(\\s|$)');
-  return regex.test(args.join(' '));
+  if(command.name){
+    var regex = new RegExp('(\\s|^)' + command.name + '(\\s|$)');
+    return regex.test(args.join(' '));
+  } else {
+    return false;
+  }
 }
 
 var usageLength = function(option){
