@@ -1,4 +1,4 @@
-var processor = require('../../processor.js');
+var cuisinart = require('../../cuisinart.js');
 
 var command = {
   options : [
@@ -23,7 +23,7 @@ var command = {
 };
 
 (function(){
-  var program = processor.program('app');
+  var program = cuisinart.program('app');
 
   program
     .version('0.0.0')

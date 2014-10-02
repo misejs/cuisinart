@@ -1,7 +1,7 @@
-var processor = require('../../processor.js');
+var cuisinart = require('../../cuisinart.js');
 
 (function(){
-  var program = processor.program('app');
+  var program = cuisinart.program('app');
 
   program
     .description('Does nothing.')

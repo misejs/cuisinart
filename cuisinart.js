@@ -6,7 +6,7 @@ var defaultCommands = [
   require('./commands/version')
 ];
 
-var processor = module.exports = {};
+var cuisinart = module.exports = {};
 
 var matchOption = function(args,option){
   var bothFlags = option.flag && option.longFlag;
@@ -76,7 +76,7 @@ var printUsage = function(command){
   });
 }
 
-processor.program = function(name){
+cuisinart.program = function(name){
   assert(name,'programs must have names.');
   var self = this;
 

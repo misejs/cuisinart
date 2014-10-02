@@ -1,14 +1,14 @@
 {
-  "name": "processor",
-  "version": "0.0.0",
+  "name": "cuisinart",
+  "version": "0.1.0",
   "description": "A node js command line parser",
-  "main": "processor.js",
+  "main": "cuisinart.js",
   "scripts": {
     "test": "mocha --recursive --reporter spec --bail --check-leaks test/tests/"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/misejs/processor.git"
+    "url": "https://github.com/misejs/cuisinart.git"
   },
   "keywords": [
     "cli",
@@ -17,9 +17,9 @@
   "author": "Jesse Ditson <jesse.ditson@gmail.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/misejs/processor/issues"
+    "url": "https://github.com/misejs/cuisinart/issues"
   },
-  "homepage": "https://github.com/misejs/processor",
+  "homepage": "https://github.com/misejs/cuisinart",
   "devDependencies": {
     "mkdirp": "^0.5.0",
     "mocha": "^1.21.4",
