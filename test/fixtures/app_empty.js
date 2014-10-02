@@ -1,13 +1,9 @@
 var processor = require('../../processor.js');
 
-var run = function(){
-  var program = processor.program();
+(function(){
+  var program = processor.program('app');
 
   program
-    .version()
-    .usage('app')
     .description('Does nothing.')
     .parse(process.argv);
-}
-
-run();
+})();

@@ -1,10 +1,10 @@
-var utils = require('./_utils/utils');
+var utils = require('../utils/utils');
 var assert = require('assert');
 
 var assertUsage = function(stdout,done){
   assert.ok(/Usage: app/.test(stdout));
-  assert.ok(/--help/.test(stdout));
-  assert.ok(/--version/.test(stdout));
+  assert.ok(/-h, --help/.test(stdout));
+  assert.ok(/-v, --version/.test(stdout));
   done();
 };
 

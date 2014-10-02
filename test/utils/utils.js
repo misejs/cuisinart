@@ -38,7 +38,7 @@ var utils = module.exports = {
   createEnvironment : function(app,callback) {
     var num = process.pid + Math.random();
     var dir = path.join(utils.tempDir, ('app-' + num));
-    var templatePath = path.join(__dirname, '../_fixtures/',app);
+    var templatePath = path.join(__dirname, '../fixtures/',app);
     var appPath = path.join(dir,'app.js');
     mkdirp(dir, function ondir(err) {
       if (err) return callback(err);

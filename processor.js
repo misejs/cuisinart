@@ -1,3 +1,4 @@
+var assert = require('assert');
 var helpCommand = require('./commands/help');
 
 var defaultCommands = [
@@ -7,15 +8,15 @@ var defaultCommands = [
 
 var processor = module.exports = {};
 
-var matchCommand = function(args,command){
-  var bothFlags = command.flag && command.longFlag;
-  var pattern = bothFlags ? '(' : '';
-  if(command.flag){
-    pattern += ('\\s-' + command.flag);
+var matchOption = function(args,option){
+  var bothFlags = option.flag && option.longFlag;
+  var pattern = bothFlags ? '(?:' : '';
+  if(option.flag){
+    pattern += ('\\s-' + option.flag);
   }
-  if(command.longFlag){
+  if(option.longFlag){
     if(bothFlags) pattern += '|'
-    pattern += ('\\s--' + command.longFlag);
+    pattern += ('\\s--' + option.longFlag);
   }
   if(bothFlags){
     pattern += ')';
@@ -24,41 +25,63 @@ var matchCommand = function(args,command){
   var regex = new RegExp(pattern);
   var matches = args.join(' ').match(regex);
   if(matches){
-    matches = matches.slice(1).map(String.prototype.trim.call);
+    return matches.length > 1 ? matches[1].trim() : true;
+  } else {
+    return false;
   }
-  return matches;
 }
 
-var printUsage = function(command){
-  var padding = Array(4).join(' ');
-  var string = '';
-  if(command.flag) string += ('-' + command.flag);
-  if(command.flag && command.longFlag) string += ', ';
-  if(command.longFlag) string += ('--' + command.longFlag);
-  var numSpaces = this._commandInfo.maxLength - string.length;
-  var spaces = new Array(numSpaces + 1).join(' ');
-  console.log(padding + string + spaces + command.description);
+var matchCommand = function(args,command){
+  var regex = new RegExp('(\\s|^)' + command.name + '(\\s|$)');
+  return regex.test(args.join(' '));
 }
 
-var commandUsageLength = function(command){
+var usageLength = function(option){
   // check the length of these arguments, so we know how much to indent the options.
-  var length = (command.flag ? command.flag.length + 1 : 0)
-             + (command.longFlag ? command.longFlag.length + 2 : 0)
-             + (command.flag && command.longFlag ? 2 : 0) + 2;
+  var length = (option.flag ? option.flag.length + 1 : 0)
+             + (option.longFlag ? option.longFlag.length + 2 : 0)
+             + (option.flag && option.longFlag ? 2 : 0) + 2;
   return length;
 }
 
-processor.program = function(){
+var optionMaxLength = function(command){
+  return (command.options || []).reduce(function(p,option){ return Math.max(p,usageLength(option)); },0);
+}
+
+var printUsage = function(command){
+  var commandPadding = '  ';
+  var optionPadding = '    ';
+  var commandString = command.usage;
+  var maxLength = optionMaxLength(command);
+  if (!command.root) {
+    console.log();
+    var description = command.description ? ' - ' + command.description : '';
+    console.log(commandPadding + this._name + ' ' + command.name + description);
+    console.log();
+  } else {
+    optionPadding = commandPadding;
+  }
+  (command.options || []).forEach(function(option){
+    var string = '';
+    if(option.flag) string += ('-' + option.flag);
+    if(option.flag && option.longFlag) string += ', ';
+    if(option.longFlag) string += ('--' + option.longFlag);
+    var numSpaces = maxLength - string.length;
+    var spaces = new Array(numSpaces + 1).join(' ');
+    console.log(optionPadding + string + spaces + (option.description || ''));
+  });
+}
+
+processor.program = function(name){
+  assert(name,'programs must have names.');
   var self = this;
 
   // properties
+  self._name = name;
   self._version;
   self._usage;
   self._description;
   self._commands = defaultCommands;
-  self._commandInfo = {
-    maxLength : defaultCommands.reduce(function(p,command){ return Math.max(p,commandUsageLength(command)); },0)
-  };
 
   // setters
   self.version = function(version){
@@ -73,9 +96,17 @@ processor.program = function(){
     self._description = description;
     return self;
   };
-  self.command = function(){
-    // TODO: validate this command.
-    self._commandInfo.maxLength = Math.max(self._commandInfo.maxLength,length);
+  self.command = function(command){
+    assert(command.root || command.name,'Non-root commands must have a name');
+    assert(!command.options || Array.isArray(command.options),'Command options must be an array');
+    if(command.options){
+      command.options.forEach(function(option){
+        assert(!option.flag || (typeof option.flag == 'string' && option.flag.length == 1),'Option flags must be single letter strings.');
+        assert(!option.longFlag || (typeof option.longFlag == 'string' && option.longFlag.length > 1),'Option long flags must be multiple letter strings.');
+        assert(!option.description || (typeof option.description == 'string'),'Option description must be a string.');
+      });
+    }
+    // TODO: fully validate this command.
     // add the command to our commands
     self._commands.push(command);
     return self;
@@ -84,14 +115,21 @@ processor.program = function(){
   // methods
   self.printUsage = printUsage;
 
-  self.parse = function(arguments){
+  self.parse = function(args){
     var matchedCommands = 0;
     for(var i in self._commands){
       var command = self._commands[i];
-      var matches = matchCommand(arguments,command);
-      if(matches){
+      var matched = matchCommand(args,command);
+      if(matched){
         matchedCommands++;
-        command.run.apply(self,matches);
+        var optionMap = (command.options || []).reduce(function(o,option){
+          var value = matchOption(args,option);
+          if(value){
+            o[option.name] = value;
+          }
+          return o;
+        },{});
+        command.run.call(self,optionMap);
         if(command.stop) return;
       }
     }

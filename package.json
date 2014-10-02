@@ -4,7 +4,7 @@
   "description": "A node js command line parser",
   "main": "processor.js",
   "scripts": {
-    "test": "mocha --recursive --reporter spec --bail --check-leaks test/"
+    "test": "mocha --recursive --reporter spec --bail --check-leaks test/tests/"
   },
   "repository": {
     "type": "git",
