@@ -18,9 +18,9 @@ module.exports = {
     var commands = self._commands;
     var printedRoot = false;
     commands.sort(function(a,b){
-      return a.root ? b.root ? 0 : -1 : 1;
+      return a.root && !b.root ? -1 : b.root && !a.root ? 1 : 0;
     }).forEach(function(command){
-      if(!command.root){
+      if(!command.root && !printedRoot){
         console.log();
         console.log('Commands:');
         printedRoot = true;

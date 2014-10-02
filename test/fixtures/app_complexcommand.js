@@ -15,7 +15,6 @@ var command = {
   name : 'complex',
   description : 'a complex command.',
   run : function(options){
-    console.log(options);
     if(options.foo){
       console.log('foo is ' + options.foo);
     }

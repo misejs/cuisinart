@@ -70,88 +70,87 @@ describe('app with a complex command', function () {
           done();
         });
       });
+    });
+    describe('-f baz',function(){
+      var dir;
+      var bin;
 
-      describe('-f baz',function(){
-        var dir;
-        var bin;
-
-        before(function (done) {
-          utils.createEnvironment('app_complexcommand.js',function (err, newDir, binPath) {
-            if (err) return done(err);
-            dir = newDir;
-            bin = binPath;
-            done();
-          });
-        });
-
-        after(function (done) {
-          this.timeout(30000);
-          utils.cleanup(dir, done);
-        });
-
-        it('should set the correct value for foo', function (done) {
-          utils.run(dir, bin, ['complex','-f','baz'], function (err, stdout) {
-            if (err) return done(err);
-            assert.ok(/foo is baz/.test(stdout));
-            assert.ok(/bar enabled : no/.test(stdout));
-            done();
-          });
+      before(function (done) {
+        utils.createEnvironment('app_complexcommand.js',function (err, newDir, binPath) {
+          if (err) return done(err);
+          dir = newDir;
+          bin = binPath;
+          done();
         });
       });
 
-      describe('--bar',function(){
-        var dir;
-        var bin;
+      after(function (done) {
+        this.timeout(30000);
+        utils.cleanup(dir, done);
+      });
 
-        before(function (done) {
-          utils.createEnvironment('app_complexcommand.js',function (err, newDir, binPath) {
-            if (err) return done(err);
-            dir = newDir;
-            bin = binPath;
-            done();
-          });
+      it('should set the correct value for foo', function (done) {
+        utils.run(dir, bin, ['complex','-f','baz'], function (err, stdout) {
+          if (err) return done(err);
+          assert.ok(/foo is baz/.test(stdout));
+          assert.ok(/bar enabled : no/.test(stdout));
+          done();
         });
+      });
+    });
 
-        after(function (done) {
-          this.timeout(30000);
-          utils.cleanup(dir, done);
-        });
+    describe('--bar',function(){
+      var dir;
+      var bin;
 
-        it('should set bar to enabled', function (done) {
-          utils.run(dir, bin, ['complex','--bar'], function (err, stdout) {
-            if (err) return done(err);
-            assert.ok(!/foo/.test(stdout));
-            assert.ok(/bar enabled : yes/.test(stdout));
-            done();
-          });
+      before(function (done) {
+        utils.createEnvironment('app_complexcommand.js',function (err, newDir, binPath) {
+          if (err) return done(err);
+          dir = newDir;
+          bin = binPath;
+          done();
         });
       });
 
-      describe('-f dickbutt --bar',function(){
-        var dir;
-        var bin;
+      after(function (done) {
+        this.timeout(30000);
+        utils.cleanup(dir, done);
+      });
 
-        before(function (done) {
-          utils.createEnvironment('app_complexcommand.js',function (err, newDir, binPath) {
-            if (err) return done(err);
-            dir = newDir;
-            bin = binPath;
-            done();
-          });
+      it('should set bar to enabled', function (done) {
+        utils.run(dir, bin, ['complex','--bar'], function (err, stdout) {
+          if (err) return done(err);
+          assert.ok(!/foo/.test(stdout));
+          assert.ok(/bar enabled : yes/.test(stdout));
+          done();
         });
+      });
+    });
 
-        after(function (done) {
-          this.timeout(30000);
-          utils.cleanup(dir, done);
+    describe('-f dickbutt --bar',function(){
+      var dir;
+      var bin;
+
+      before(function (done) {
+        utils.createEnvironment('app_complexcommand.js',function (err, newDir, binPath) {
+          if (err) return done(err);
+          dir = newDir;
+          bin = binPath;
+          done();
         });
+      });
 
-        it('should set the correct value for foo', function (done) {
-          utils.run(dir, bin, ['complex','-f','dickbutt','--bar'], function (err, stdout) {
-            if (err) return done(err);
-            assert.ok(/foo is dickbutt/.test(stdout));
-            assert.ok(/bar enabled : yes/.test(stdout));
-            done();
-          });
+      after(function (done) {
+        this.timeout(30000);
+        utils.cleanup(dir, done);
+      });
+
+      it('should set the correct value for foo', function (done) {
+        utils.run(dir, bin, ['complex','-f','dickbutt','--bar'], function (err, stdout) {
+          if (err) return done(err);
+          assert.ok(/foo is dickbutt/.test(stdout));
+          assert.ok(/bar enabled : yes/.test(stdout));
+          done();
         });
       });
 
