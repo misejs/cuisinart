@@ -59,6 +59,33 @@ Commands:
     --o2  sets option two.
 ```
 
+
+You can also add default arguments that will be passed through after the options hash to command `run` methods:
+
+```javascript
+var cuisinart = require('cuisinart');
+var program = cuisinart.program('app');
+
+program
+  .version('0.0.0')
+  .usage('[command]')
+  .description('an app with default arguments')
+  .command(commandOne)
+  .baseArgs('one','two')
+  .parse(process.argv);
+```
+
+The arguments will then be added to the arguments of the run call, and can be received like so:
+
+```javascript
+var commandOne = {
+  name : 'commandOne',
+  run : function(options,arg1,arg2){
+    // arg1 is 'one',arg2 is 'two'
+  }
+}
+```
+
 Commands
 ---
 
