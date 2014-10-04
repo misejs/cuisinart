@@ -86,6 +86,7 @@ cuisinart.program = function(name){
   self._usage;
   self._description;
   self._commands = defaultCommands;
+  self._baseArgs = [];
 
   // setters
   self.version = function(version){
@@ -115,6 +116,10 @@ cuisinart.program = function(name){
     self._commands.push(command);
     return self;
   }
+  self.baseArgs = function(){
+    self._baseArgs = self._baseArgs.concat(Array.prototype.slice.call(arguments));
+    return self;
+  };
 
   // methods
   self.printUsage = printUsage;
@@ -133,7 +138,7 @@ cuisinart.program = function(name){
           }
           return o;
         },{});
-        command.run.call(self,optionMap);
+        command.run.apply(self,[optionMap].concat(self._baseArgs));
         if(command.stop) return;
       }
     }

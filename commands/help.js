@@ -13,7 +13,7 @@ module.exports = {
     var self = this;
     var usage = self._usage ? ' ' + self._usage : '';
     console.log('Usage: ' + self._name + usage);
-    if(self.description) console.log('       ' + self._description);
+    if(self._description) console.log('       ' + self._description);
     console.log();
     var commands = self._commands;
     var printedRoot = false;

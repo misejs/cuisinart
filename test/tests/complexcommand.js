@@ -44,6 +44,34 @@ describe('app with a complex command', function () {
 
   describe('app complexcommand', function () {
 
+    describe('(default base args)',function(){
+      var dir;
+      var bin;
+
+      before(function (done) {
+        utils.createEnvironment('app_complexcommand.js',function (err, newDir, binPath) {
+          if (err) return done(err);
+          dir = newDir;
+          bin = binPath;
+          done();
+        });
+      });
+
+      after(function (done) {
+        this.timeout(30000);
+        utils.cleanup(dir, done);
+      });
+
+      it('should properly pass the base args to the subcommand', function (done) {
+        utils.run(dir, bin, ['complex'], function (err, stdout) {
+          if (err) return done(err);
+          assert.ok(/arg1 : fizzle/.test(stdout));
+          assert.ok(/arg2 : bazzle/.test(stdout));
+          done();
+        });
+      });
+    });
+
     describe('(no options)',function(){
       var dir;
       var bin;
@@ -71,6 +99,7 @@ describe('app with a complex command', function () {
         });
       });
     });
+
     describe('-f baz',function(){
       var dir;
       var bin;
