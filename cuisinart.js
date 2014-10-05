@@ -1,5 +1,6 @@
 var assert = require('assert');
 var helpCommand = require('./commands/help');
+var async = require('async');
 
 var defaultCommands = [
   helpCommand,
@@ -76,6 +77,19 @@ var printUsage = function(command){
   });
 }
 
+var hasCallback = function(fn){
+  // check if the following are true:
+  // 1. we have a named argument
+  // 2. we call, apply, or invoke a variable by that name in the method body
+  // This gives us a good estimate if the function is async or not.
+  var fnString = fn.toString();
+  var argMatches = fnString.match(/^function \((?:.*[,\s]+)?([\w]+)\){/);
+  if(!argMatches) return false;
+  var lastArg = argMatches[1];
+  var cbPattern = new RegExp(';?[\\s\\S]*' + lastArg + '\\.?(call|apply)?\\([^\\)]*\\)[\\s\\S]*;?');
+  return cbPattern.test(fnString);
+}
+
 cuisinart.program = function(name){
   assert(name,'programs must have names.');
   var self = this;
@@ -124,10 +138,9 @@ cuisinart.program = function(name){
   // methods
   self.printUsage = printUsage;
 
-  self.parse = function(args){
+  self.parse = function(args,callback){
     var matchedCommands = 0;
-    for(var i in self._commands){
-      var command = self._commands[i];
+    async.forEach(self._commands,function(command,done){
       var matched = matchCommand(args,command);
       if(matched){
         matchedCommands++;
@@ -138,14 +151,27 @@ cuisinart.program = function(name){
           }
           return o;
         },{});
-        command.run.apply(self,[optionMap].concat(self._baseArgs));
-        if(command.stop) return;
+        var calledBack;
+        var complete = function(err){
+          if(calledBack) return;
+          calledBack = true;
+          if(err) return done(err);
+          if(command.stop) return done(new Error('complete'));
+          done(err);
+        };
+        command.run.apply(self,[optionMap].concat(self._baseArgs,complete));
+        // if we don't detect a callback, assume that this is synchronous.
+        if(!hasCallback(command.run)) complete();
+      } else {
+        done();
       }
-    }
-    if(!matchedCommands){
-      // print the help if nothing matches
-      helpCommand.run.apply(self);
-    }
+    },function(err){
+      if(!matchedCommands){
+        // print the help if nothing matches
+        helpCommand.run.apply(self);
+      }
+      if(callback) callback(err);
+    });
   };
   return self;
 };

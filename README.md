@@ -86,6 +86,16 @@ var commandOne = {
 }
 ```
 
+All of the default commands are synchronous, but if you have async commands, you can pass a callback to the `.parse` call:
+
+```javascript
+program
+// setup program...
+  .parse(process.argv,function(err){
+    // this will be executed after all commands have run, and will return any errors they call back with
+  });
+```
+
 Commands
 ---
 
@@ -116,7 +126,43 @@ var command = {
 };
 ```
 
-There are 5 possible keys for a command, 2 of which are mandatory:
+Commands can be synchronous or async. Cuisinart expects that if a command is async, the callback will be called, invoked, or applied by the same name that it is passed to the `run` method of the command.
+
+Examples
+
+```javascript
+var command = {
+  name : 'async',
+  run : function(options,baseArg,callback){
+    setTimeout(function(){
+      callback();
+      // note that this can be called with any arguments, and can also be:
+      // callback.call()
+      // or
+      // callback.apply()
+    },1000);
+  }
+}
+```
+
+However, cuisinart is unable to detect that a command is async if you rename the callback or access it directly from the arguments list. So this example would be run *synchronously*, even though it is supposed to be async:
+
+```javascript
+var command = {
+  name : 'bad-async',
+  run : function(options,baseArg,callback){
+    var args = Array.prototype.slice.call(arguments);
+    var done = args.pop();
+    setTimeout(function(){
+      done();
+      // because we're calling our callback by a different name, cuisinart is not able to detect that it should wait for this command.
+      // as a result, this would accidentally call the next command before this one completes.
+    },1000);
+  }
+}
+```
+
+There are 6 possible keys for a command, 2 of which are mandatory:
 
 - name (mandatory) : this is the name of the command. Use this name to invoke the command.
 
@@ -125,16 +171,20 @@ example:
 app complex
 ```
 
+- run (mandatory) : this is a method that will be called when a command is run. The options hash will be passed to this function.
+
 - options (optional) : you can specify options if you have them, these will be parsed and set either as true/false or with their values and passed to the run function
 
 example:
 ```shell
-app complex -f value --bar  
+app complex -f value --bar
 ```
 
 - description (optional) : this is printed with the command when `--help` is called.
+
 - root (optional) : this is used to indicate that this command does not need to be called explicitly - `--help` and `--version` are examples of root commands. They are essentially option-only commands. In normal cases, you would not specify this at all, as it defaults to false.
-- run (mandatory) : this is a method that will be called when a command is run. The options hash will be passed to this function.
+
+- stop (optional) : if this is set to true, it will prevent other commands from running after this command.
 
 Notes
 ---
