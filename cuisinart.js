@@ -9,9 +9,9 @@ var defaultCommands = [
 
 var cuisinart = module.exports = {};
 
-var matchOption = function(args,option){
+var optionMatches = function(args,option){
   var bothFlags = option.flag && option.longFlag;
-  var pattern = bothFlags ? '(?:' : '';
+  var pattern = '(';
   if(option.flag){
     pattern += ('\\s-' + option.flag);
   }
@@ -19,12 +19,15 @@ var matchOption = function(args,option){
     if(bothFlags) pattern += '|'
     pattern += ('\\s--' + option.longFlag);
   }
-  if(bothFlags){
-    pattern += ')';
-  }
-  pattern += '(?:\\s|$)([^-]+)?';
+  pattern += ')';
+  pattern += '(?:\\s|$)([^-\\s]+)?';
   var regex = new RegExp(pattern);
   var matches = args.join(' ').match(regex);
+  return matches && matches[0] ? matches.splice(1) : matches;
+}
+
+var matchOption = function(args,option){
+  var matches = optionMatches(args,option);
   if(matches){
     return matches[1] ? matches[1].trim() : true;
   } else {
@@ -34,8 +37,9 @@ var matchOption = function(args,option){
 
 var matchCommand = function(args,command){
   if(command.name){
-    var regex = new RegExp('(\\s|^)' + command.name + '(\\s|$)');
-    return regex.test(args.join(' '));
+    var regex = new RegExp('(?:\\s|^)(' + command.name + ')(?:\\s|$)');
+    var matches = args.join(' ').match(regex);
+    return matches && matches[1] ? matches[1].trim() : false;
   } else {
     return false;
   }
@@ -134,6 +138,22 @@ cuisinart.program = function(name){
     self._baseArgs = self._baseArgs.concat(Array.prototype.slice.call(arguments));
     return self;
   };
+  self.unmatchedArgs = function(args){
+    var argsString = Array.prototype.slice.call(args).join('##');
+    this._commands.forEach(function(command){
+      var match = matchCommand(args,command);
+      if(match){
+        argsString = argsString.replace(match,'');
+        (command.options || []).forEach(function(option){
+          var optionMatch = optionMatches(args,option);
+          if(optionMatch){
+            argsString = argsString.replace(optionMatch.join('##').trim(),'');
+          }
+        });
+      }
+    });
+    return argsString.split('##').filter(function(v){return v;});
+  }
 
   // methods
   self.printUsage = printUsage;
