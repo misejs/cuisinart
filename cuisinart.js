@@ -139,7 +139,7 @@ cuisinart.program = function(name){
     return self;
   };
   self.unmatchedArgs = function(args){
-    var argsString = Array.prototype.slice.call(args).join('##');
+    var argsString = Array.prototype.slice.call(args,2).join('##');
     this._commands.forEach(function(command){
       var match = matchCommand(args,command);
       if(match){
@@ -159,8 +159,9 @@ cuisinart.program = function(name){
   self.printUsage = printUsage;
 
   self.parse = function(args,callback){
+    args = Array.prototype.slice.call(args,2);
     var matchedCommands = 0;
-    async.forEach(self._commands,function(command,done){
+    async.forEachSeries(self._commands,function(command,done){
       var matched = matchCommand(args,command);
       if(matched){
         matchedCommands++;
@@ -177,7 +178,7 @@ cuisinart.program = function(name){
           calledBack = true;
           if(err) return done(err);
           if(command.stop) return done(new Error('complete'));
-          done(err);
+          done();
         };
         command.run.apply(self,[optionMap].concat(self._baseArgs,complete));
         // if we don't detect a callback, assume that this is synchronous.
