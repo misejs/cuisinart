@@ -105,6 +105,7 @@ cuisinart.program = function(name){
   self._description;
   self._commands = defaultCommands;
   self._baseArgs = [];
+  self._args = [];
 
   // setters
   self.version = function(version){
@@ -158,31 +159,36 @@ cuisinart.program = function(name){
   // methods
   self.printUsage = printUsage;
 
+  self.run = function(command,args,done){
+    var optionMap = (command.options || []).reduce(function(o,option){
+      var value = matchOption(args,option);
+      if(value){
+        o[option.name] = value;
+      }
+      return o;
+    },{});
+    var calledBack;
+    var complete = function(err){
+      if(calledBack) return;
+      calledBack = true;
+      if(err) return done(err);
+      if(command.stop) return done(new Error('complete'));
+      done();
+    };
+    command.run.apply(self,[optionMap].concat(self._baseArgs,complete));
+    // if we don't detect a callback, assume that this is synchronous.
+    if(!hasCallback(command.run)) complete();
+  }
+
   self.parse = function(args,callback){
     args = Array.prototype.slice.call(args,2);
+    self.args = args;
     var matchedCommands = 0;
     async.forEachSeries(self._commands,function(command,done){
       var matched = matchCommand(args,command);
       if(matched){
         matchedCommands++;
-        var optionMap = (command.options || []).reduce(function(o,option){
-          var value = matchOption(args,option);
-          if(value){
-            o[option.name] = value;
-          }
-          return o;
-        },{});
-        var calledBack;
-        var complete = function(err){
-          if(calledBack) return;
-          calledBack = true;
-          if(err) return done(err);
-          if(command.stop) return done(new Error('complete'));
-          done();
-        };
-        command.run.apply(self,[optionMap].concat(self._baseArgs,complete));
-        // if we don't detect a callback, assume that this is synchronous.
-        if(!hasCallback(command.run)) complete();
+        self.run(command,args,done);
       } else {
         done();
       }
