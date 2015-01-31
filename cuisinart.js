@@ -20,11 +20,11 @@ var optionMatches = function(args,option){
     pattern += ('\\s--' + option.longFlag);
   }
   pattern += ')';
-  pattern += '(?:\\s|$)([^-\\s]+)?';
+  pattern += '(?:\\s|$)([^\\s]+)?';
   var regex = new RegExp(pattern);
-  var matches = args.join(' ').match(regex);
+  var matches = (' ' + args.join(' ')).match(regex);
   return matches && matches[0] ? matches.splice(1) : matches;
-}
+};
 
 var matchOption = function(args,option){
   var matches = optionMatches(args,option);
@@ -33,7 +33,7 @@ var matchOption = function(args,option){
   } else {
     return false;
   }
-}
+};
 
 var matchCommand = function(args,command){
   if(command.name){
@@ -43,7 +43,7 @@ var matchCommand = function(args,command){
   } else {
     return false;
   }
-}
+};
 
 var usageLength = function(option){
   // check the length of these arguments, so we know how much to indent the options.
@@ -51,11 +51,11 @@ var usageLength = function(option){
              + (option.longFlag ? option.longFlag.length + 2 : 0)
              + (option.flag && option.longFlag ? 2 : 0) + 2;
   return length;
-}
+};
 
 var optionMaxLength = function(command){
   return (command.options || []).reduce(function(p,option){ return Math.max(p,usageLength(option)); },0);
-}
+};
 
 var printUsage = function(command){
   var commandPadding = '  ';
@@ -79,7 +79,7 @@ var printUsage = function(command){
     var spaces = new Array(numSpaces + 1).join(' ');
     console.log(optionPadding + string + spaces + (option.description || ''));
   });
-}
+};
 
 var hasCallback = function(fn){
   // check if the following are true:
@@ -92,7 +92,25 @@ var hasCallback = function(fn){
   var lastArg = argMatches[1];
   var cbPattern = new RegExp(';?[\\s\\S]*' + lastArg + '\\.?(call|apply)?\\([^\\)]*\\)[\\s\\S]*;?');
   return cbPattern.test(fnString);
-}
+};
+
+var unmatchedArgs = function(){
+  var args = this.args;
+  var argsString = Array.prototype.slice.call(args,1).join('##');
+  this._commands.forEach(function(command){
+    var match = matchCommand(args,command);
+    if(match){
+      argsString = argsString.replace(match,'');
+      (command.options || []).forEach(function(option){
+        var optionMatch = optionMatches(args,option);
+        if(optionMatch){
+          argsString = argsString.replace(optionMatch.join('##').trim(),'');
+        }
+      });
+    }
+  });
+  return argsString.split('##').filter(function(v){return v;});
+};
 
 cuisinart.program = function(name){
   assert(name,'programs must have names.');
@@ -139,27 +157,13 @@ cuisinart.program = function(name){
     self._baseArgs = self._baseArgs.concat(Array.prototype.slice.call(arguments));
     return self;
   };
-  self.unmatchedArgs = function(args){
-    var argsString = Array.prototype.slice.call(args,2).join('##');
-    this._commands.forEach(function(command){
-      var match = matchCommand(args,command);
-      if(match){
-        argsString = argsString.replace(match,'');
-        (command.options || []).forEach(function(option){
-          var optionMatch = optionMatches(args,option);
-          if(optionMatch){
-            argsString = argsString.replace(optionMatch.join('##').trim(),'');
-          }
-        });
-      }
-    });
-    return argsString.split('##').filter(function(v){return v;});
-  }
 
   // methods
   self.printUsage = printUsage;
 
   self.run = function(command,args,done){
+    // trim off the command name
+    args = args.slice(1);
     var optionMap = (command.options || []).reduce(function(o,option){
       var value = matchOption(args,option);
       if(value){
@@ -167,24 +171,28 @@ cuisinart.program = function(name){
       }
       return o;
     },{});
+
+    this.unmatchedArgs = unmatchedArgs.apply(this);
+
     var calledBack;
+
     var complete = function(err){
       if(calledBack) return;
       calledBack = true;
-      if(err) return done(err);
-      if(command.stop) return done(new Error('complete'));
-      done();
+      var args = Array.prototype.slice.call(arguments);
+      if(command.stop) args[0] = new Error('complete');
+      done.apply(null,args);
     };
     command.run.apply(self,[optionMap].concat(self._baseArgs,complete));
     // if we don't detect a callback, assume that this is synchronous.
     if(!hasCallback(command.run)) complete();
-  }
+  };
 
   self.parse = function(args,callback){
     args = Array.prototype.slice.call(args,2);
     self.args = args;
     var matchedCommands = 0;
-    async.forEachSeries(self._commands,function(command,done){
+    async.mapSeries(self._commands,function(command,done){
       var matched = matchCommand(args,command);
       if(matched){
         matchedCommands++;
@@ -192,12 +200,12 @@ cuisinart.program = function(name){
       } else {
         done();
       }
-    },function(err){
+    },function(err,results){
       if(!matchedCommands){
         // print the help if nothing matches
         helpCommand.run.apply(self);
       }
-      if(callback) callback(err);
+      if(callback) callback(err,results);
     });
   };
   return self;

@@ -1,38 +1,30 @@
 var utils = require('../utils/utils');
 var assert = require('assert');
 
-var cuisinart = require('../../cuisinart.js');
-
-var command = {
-  options : [
-    {
-      name : 'foo',
-      flag : 'f',
-      description : 'foo'
-    },{
-      name : 'bar',
-      longFlag : 'bar',
-      description : 'bar'
-    }
-  ],
-  name : 'command',
-  run : function(options){
-    console.log('command ran');
-  }
-};
-
 describe('when called with unmatched arguments', function () {
 
-  it('should properly return the unmatched arguments',function(){
-    var program = cuisinart.program('app');
+  var dir;
+  var bin;
 
-    program
-      .usage('[command]')
-      .description('an app with an async command and no base args')
-      .command(command)
+  before(function (done) {
+    utils.createEnvironment('app_unmatchedargs.js',function (err, newDir, binPath) {
+      if (err) return done(err);
+      dir = newDir;
+      bin = binPath;
+      done();
+    });
+  });
 
-    var unmatched = program.unmatchedArgs(['command','-f','--bar','barargument','extra']);
+  after(function (done) {
+    this.timeout(30000);
+    utils.cleanup(dir, done);
+  });
 
-    assert.deepEqual(unmatched,['extra']);
+  it('should properly return the unmatched arguments',function(done){
+    utils.run(dir,bin,['command','-f','foo','--bar','bar','extra','arguments'],function(err,stdout){
+      if (err) return done(err);
+      assert.ok(/unmatched arguments: extra,arguments/.test(stdout));
+      done();
+    });
   });
 });
