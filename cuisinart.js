@@ -84,14 +84,18 @@ var printUsage = function(command){
 var hasCallback = function(fn){
   // check if the following are true:
   // 1. we have a named argument
-  // 2. we call, apply, or invoke a variable by that name in the method body
+  // one of:
+  // 2a. we call, apply, or invoke a variable by that name in the method body
+  // 2b. we pass a variable of that name as an argument to another function.
   // This gives us a good estimate if the function is async or not.
   var fnString = fn.toString();
   var argMatches = fnString.match(/^function \((?:.*[,\s]+)?([\w]+)\){/);
   if(!argMatches) return false;
+  fnString = fnString.replace(argMatches[0],'');
   var lastArg = argMatches[1];
-  var cbPattern = new RegExp(';?[\\s\\S]*' + lastArg + '\\.?(call|apply)?\\([^\\)]*\\)[\\s\\S]*;?');
-  return cbPattern.test(fnString);
+  var cbPattern = new RegExp(';?[\\s\\S]*' + lastArg + '\\.?(call|apply|bind)?\\([^\\)]*\\)[\\s\\S]*;?');
+  var argPattern = new RegExp('\\w(\\(|\\([^\\)]+[,\\s])'+lastArg+'([,\\s][^\\)]+\\)|\\))');
+  return cbPattern.test(fnString) || argPattern.test(fnString);
 };
 
 var unmatchedArgs = function(){
