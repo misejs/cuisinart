@@ -91,10 +91,10 @@ var hasCallback = function(fn){
   var fnString = fn.toString();
   var argMatches = fnString.match(/^function \((?:.*[,\s]+)?([\w]+)\){/);
   if(!argMatches) return false;
-  fnString = fnString.replace(argMatches[0],'');
+  fnString = fnString.replace(argMatches[0],'').replace(/\n/g,'');
   var lastArg = argMatches[1];
   var cbPattern = new RegExp(';?[\\s\\S]*' + lastArg + '\\.?(call|apply|bind)?\\([^\\)]*\\)[\\s\\S]*;?');
-  var argPattern = new RegExp('\\w(\\(|\\([^\\)]+[,\\s])'+lastArg+'([,\\s][^\\)]+\\)|\\))');
+  var argPattern = new RegExp('\\w(\\(|\\(.+?[,\\s])'+lastArg+'([,\\s][^\\)]+\\)|\\))');
   return cbPattern.test(fnString) || argPattern.test(fnString);
 };
 
@@ -180,7 +180,7 @@ cuisinart.program = function(name){
 
     var calledBack;
 
-    var complete = function(err){
+    var complete = function(){
       if(calledBack) return;
       calledBack = true;
       var args = Array.prototype.slice.call(arguments);
@@ -189,7 +189,10 @@ cuisinart.program = function(name){
     };
     command.run.apply(self,[optionMap].concat(self._baseArgs,complete));
     // if we don't detect a callback, assume that this is synchronous.
-    if(!hasCallback(command.run)) complete();
+    if(!hasCallback(command.run)){
+      // console.log('running ' + command.name + ' synchronously.');
+      complete();
+    }
   };
 
   self.parse = function(args,callback){
@@ -205,6 +208,7 @@ cuisinart.program = function(name){
         done();
       }
     },function(err,results){
+      results = results.filter(function(r){ return r; });
       if(!matchedCommands){
         // print the help if nothing matches
         helpCommand.run.apply(self);
